@@ -3,7 +3,10 @@ const { Input } = require('midi')
 const path = require('node:path')
 const { Worker, MessageChannel } = require('node:worker_threads')
 
-let configPath = '~/.midi-connect/config.json'
+let configPath = path.join(
+  require('os').homedir(),
+  '/.midi-connect/config.json'
+)
 
 program.option('-c, --config <path>', 'set config path')
 
@@ -80,10 +83,10 @@ program.command('start', { isDefault: true }).action(() => {
     },
   })
 
-  const activeNotes = []
-  const releasedNotes = []
-
   input.addListener('message', (deltaTime, message) => {
+    const activeNotes = []
+    const releasedNotes = []
+
     const [status, note, velocity] = message
 
     const noteOn = noteConfig => {
@@ -92,14 +95,8 @@ program.command('start', { isDefault: true }).action(() => {
         velocity,
         ...noteConfig,
       })
-      console.log(activeNotes)
     }
     const noteOff = noteConfig => {
-      console.log('noteOff')
-      activeNotes.splice(
-        activeNotes.findIndex(element => element?.note == note),
-        1
-      )
       releasedNotes.push({
         note,
         velocity,
@@ -143,10 +140,6 @@ program.command('start', { isDefault: true }).action(() => {
     }
 
     if (activeNotes.length || releasedNotes.length) {
-      console.log({
-        activeNotes,
-        releasedNotes,
-      })
       worker.postMessage({
         activeNotes: activeNotes,
         releasedNotes: releasedNotes,

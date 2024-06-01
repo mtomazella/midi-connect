@@ -2,35 +2,25 @@ const { parentPort } = require('node:worker_threads')
 const { keyToggle } = require('robotjs')
 
 const keysDown = {}
-let activeNotes = []
-let releasedNotes = []
 
 parentPort.on('message', message => {
-  if (message.activeNotes) activeNotes = message.activeNotes
-  if (message.releasedNotes) {
-    const toRelease = {}
-    releasedNotes.forEach(({ keycode }) => {
-      if (!keycode || activeNotes.find(element => element.keycode == keycode))
-        return
-      toRelease[keycode] = true
-    })
-    releasedNotes.push(...Object.keys(toRelease))
-  }
+  let activeNotes = []
+  let releasedNotes = []
 
-  // console.log({
-  //   activeNotes,
-  //   releasedNotes,
-  // })
+  if (message.activeNotes) activeNotes = message.activeNotes
+  if (message.releasedNotes) releasedNotes = message.releasedNotes
 
   activeNotes.forEach(({ keycode }) => {
     if (!keycode || keysDown[keycode]) return
+    console.log('down', keycode)
     keyToggle(keycode, 'down')
     keysDown[keycode] = true
   })
-  releasedNotes.forEach(keycode => {
+  releasedNotes.forEach(({ keycode }) => {
     if (!keycode) return
+    console.log('up', keycode)
     keyToggle(keycode, 'up')
-    delete keysDown[keycode]
+    keysDown[keycode] = false
   })
   releasedNotes = []
 })
