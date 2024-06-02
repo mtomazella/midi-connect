@@ -17,7 +17,7 @@ parentPort.on('message', message => {
     keysDown[keycode] = true
   })
   releasedNotes.forEach(({ keycode }) => {
-    if (!keycode) return
+    if (!keycode || !keysDown[keycode]) return
     console.log('up', keycode)
     keyToggle(keycode, 'up')
     keysDown[keycode] = false
